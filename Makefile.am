@@ -1,6 +1,7 @@
 bin_PROGRAMS = wkline
 wkline_SOURCES = \
 	util/log.c \
+	util/settings.c \
 	src/wkline.c \
 	src/widgets/desktops.c
 

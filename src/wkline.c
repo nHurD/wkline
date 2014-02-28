@@ -1,6 +1,7 @@
 #include "config.h"
 #include "wkline.h"
 #include "util/log.h"
+#include "util/settings.h"
 #include "widgets/widgets.h"
 
 thread_data_t thread_data;
@@ -48,6 +49,8 @@ wk_notify_load_status_cb (WebKitWebView *web_view, GParamSpec *pspec, GtkWidget 
 int
 main (int argc, char *argv[]) {
 	int screen_nbr = 0;
+	main_settings_t *main_settings = read_main_config_file("wkline.conf");
+	wklog("wk line: %d", main_settings->line_height);
 
 	xcb_connection_t *conn = xcb_connect(NULL, &screen_nbr);
 	if (xcb_connection_has_error(conn)) {
@@ -60,7 +63,7 @@ main (int argc, char *argv[]) {
 	xcb_ewmh_init_atoms_replies(ewmh, ewmh_cookie, NULL);
 
 	xcb_screen_t *screen = ewmh->screens[screen_nbr];
-	wk_dimensions_t dim = {.w = screen->width_in_pixels, .h = wkline_height};
+	wk_dimensions_t dim = {.w = screen->width_in_pixels, .h = main_settings->line_height};
 
 	// init window
 	guint window_xid;
@@ -93,8 +96,8 @@ main (int argc, char *argv[]) {
 	g_signal_connect(web_view, "notify::load-status", G_CALLBACK(wk_notify_load_status_cb), web_view);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-	wklog("Opening URI '%s'", wkline_theme_uri);
-	webkit_web_view_load_uri(web_view, wkline_theme_uri);
+	wklog("Opening URI '%s'", main_settings->theme_url);
+	webkit_web_view_load_uri(web_view, main_settings->theme_url);
 
 	gtk_widget_show_all(GTK_WIDGET(window));
 
