@@ -1,6 +1,7 @@
 AC_INIT([wkline], [0.01], [https://github.com/Lokaltog/wkline])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_CONFIG_HEADERS([config.h])
 
 AC_ARG_WITH([alsa], AS_HELP_STRING([--without-alsa], [compile without alsa support]))
@@ -54,6 +55,7 @@ PKG_CHECK_MODULES([GTK3], [gtk+-3.0])
 PKG_CHECK_MODULES([WEBKIT], [webkitgtk-3.0])
 PKG_CHECK_MODULES([XCB], [xcb-util xcb-ewmh xcb-icccm])
 PKG_CHECK_MODULES([JSON_GLIB], [jansson])
+PKG_CHECK_MODULES([GMODLULE], [gmodule-2.0])
 
 AC_CONFIG_FILES([
  Makefile
