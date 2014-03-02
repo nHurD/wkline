@@ -72,6 +72,8 @@ main (int argc, char *argv[]) {
 	wkline_config_t config;
 	load_config_file(&config);
 
+	wklog("widget data size: %d", json_array_size(config.widget_data));
+
 	gtk_init(&argc, &argv);
 
 	// GtkScrolledWindow fails to lock small heights (<25px), so a GtkLayout is used instead
