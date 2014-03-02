@@ -13,4 +13,5 @@ typedef struct wkline_config_t {
 	enum wkline_position position;
 	char theme_uri[CONFIG_BUF_SIZE];
 	char background[CONFIG_BUF_SIZE];
+	json_t *widget_data;
 } wkline_config_t;

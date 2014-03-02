@@ -69,8 +69,8 @@ main (int argc, char *argv[]) {
 	GtkWindow *window;
 	GtkLayout *layout;
 
-	wkline_config_t config;
-	load_config_file(&config);
+	wkline_config_t *config = malloc(sizeof(wkline_config_t));
+	load_config_file(config);
 
 	gtk_init(&argc, &argv);
 
@@ -118,6 +118,7 @@ main (int argc, char *argv[]) {
 
 	gtk_main();
 
+	json_decref(config->widget_data);
 	free(ewmh);
 
 	return 0;
