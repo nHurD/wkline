@@ -18,10 +18,13 @@ load_config_file (wkline_config_t *config) {
 	strcpy(config->theme_uri, json_string_value(json_object_get(json_config, "theme_uri")));
 	strcpy(config->background, json_string_value(json_object_get(json_config, "background")));
 
-	config->widget_data = json_object_get(json_config, "widgets");
 
+	json_t *widget_data = json_object_get(json_config, "widgets");
 
-	//json_decref(json_config);
+	config->widget_data = malloc(sizeof(widget_data) * sizeof(json_t *));
+	memcpy(config->widget_data, widget_data, sizeof(widget_data) * sizeof(json_t *));
+
+	json_decref(json_config);
 
 	return 0;
 }
