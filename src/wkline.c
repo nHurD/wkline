@@ -119,6 +119,7 @@ main (int argc, char *argv[]) {
 	gtk_main();
 
 	json_decref(config->widget_data);
+	free(config);
 	free(ewmh);
 
 	return 0;
