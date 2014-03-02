@@ -3,6 +3,7 @@
 typedef struct {
 	int line_height;
 	char *theme_url;
+	int widget_count;
 	json_t *widget_data;
 } main_settings_t;
 

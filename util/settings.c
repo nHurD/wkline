@@ -46,6 +46,17 @@ read_main_config_file(char *file) {
 
 	}
 
+	// Widgets
+	itm_data = json_object_get(data, "widgets");
+	if (itm_data == NULL) {
+		config->widget_count = 0;
+		config->widget_data = NULL;
+	} else {
+		// Save the array size and the information for later.
+		config->widget_count = json_array_size(itm_data);
+		config->widget_data = itm_data;
+	}
+
 
 	return config;
 
