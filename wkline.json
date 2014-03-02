@@ -1,0 +1,14 @@
+{
+   	"line_height": 26,
+   	"theme_url": "http://lokaltog.github.io/wkline-theme-default/",
+	"widgets": [{
+		"type": "weather",
+		"location": "",
+		"unit": "C" 
+	},
+	{
+		"type": "external_ip",
+		"url": ""
+	}
+	]
+}

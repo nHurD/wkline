@@ -49,7 +49,7 @@ wk_notify_load_status_cb (WebKitWebView *web_view, GParamSpec *pspec, GtkWidget 
 int
 main (int argc, char *argv[]) {
 	int screen_nbr = 0;
-	main_settings_t *main_settings = read_main_config_file("wkline.conf");
+	main_settings_t *main_settings = read_main_config_file("wkline.json");
 	wklog("wk line: %d", main_settings->line_height);
 
 	xcb_connection_t *conn = xcb_connect(NULL, &screen_nbr);
