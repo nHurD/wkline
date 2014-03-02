@@ -1,5 +1,6 @@
 #include "config.h"
 #include "wkline.h"
+#include "load_config.h"
 #include "util/log.h"
 #include "widgets/widgets.h"
 
@@ -67,6 +68,9 @@ main (int argc, char *argv[]) {
 	int strut_partial[12] = {0, 0, dim.h, 0, 0, 0, 0, 0, 0, dim.w, 0, 0};
 	GtkWindow *window;
 	GtkLayout *layout;
+
+	wkline_config_t config;
+	load_config_file(&config);
 
 	gtk_init(&argc, &argv);
 
