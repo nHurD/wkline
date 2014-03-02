@@ -18,6 +18,7 @@
 		{
 			"name": "now_playing_mpd",
 			"config": {
+				"update_interval": 1000,
 				"host": "localhost",
 				"port": 6060
 			}
@@ -51,8 +52,9 @@
 		{
 			"name": "datetime",
 			"config": {
-				"date_format": "%Y-%m-%d",
-				"time_format": "%H:%M:%S"
+				"update_interval": 1000,
+				"date_format": "DDDD-MM-YY",
+				"time_format": "HH:mm:ss"
 			}
 		}
 	]
