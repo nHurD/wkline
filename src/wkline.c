@@ -1,6 +1,5 @@
 #include "config.h"
 #include "wkline.h"
-#include "load_config.h"
 #include "util/log.h"
 #include "widgets/widgets.h"
 
@@ -57,9 +56,12 @@ wk_notify_load_status_cb (WebKitWebView *web_view, GParamSpec *pspec, GtkWidget 
 	}
 }
 
-int
-main (int argc, char *argv[]) {
-	int screen_nbr = 0;
+static void
+wk_realize_handler(GtkWidget *window, gpointer user_data){
+	wk_dimensions_t *dim = user_data;
+	GdkAtom atom;
+	GdkWindow *gdkw;
+	long vals[4] = {0,0,dim->h,0};
 
 	xcb_connection_t *conn = xcb_connect(NULL, &screen_nbr);
 	if (xcb_connection_has_error(conn)) {
@@ -79,11 +81,10 @@ main (int argc, char *argv[]) {
 	int strut_partial[12] = {0, 0, dim.h, 0, 0, 0, 0, 0, 0, dim.w, 0, 0};
 	GtkWindow *window;
 	GtkLayout *layout;
-
-	wkline_config_t *config = malloc(sizeof(wkline_config_t));
-	load_config_file(config);
-
-	wklog("widget data size: %d", json_array_size(config->widgets_config));
+	GdkScreen *screen;
+	GdkRectangle dest;
+	gint monitor_num;
+	wk_dimensions_t dim;
 
 	gtk_init(&argc, &argv);
 
@@ -92,12 +93,19 @@ main (int argc, char *argv[]) {
 	layout = GTK_LAYOUT(gtk_layout_new(NULL, NULL));
 	web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
 
+	// get window size
+	screen = gtk_window_get_screen(window);
+	gdk_screen_get_monitor_geometry (screen, wkline_monitor, &dest);
+	dim.w = dest.width;
+	dim.h = wkline_height; /* defined in config.h */
+
 	// set window dock properties
 	gtk_window_move(window, 0, 0);
 	gtk_window_resize(window, dim.w, dim.h);
 	gtk_window_set_gravity(window, GDK_GRAVITY_STATIC);
 	gtk_window_set_skip_pager_hint(window, TRUE);
 	gtk_window_set_skip_taskbar_hint(window, TRUE);
+	gtk_window_set_gravity(window, GDK_GRAVITY_STATIC);
 	gtk_window_set_type_hint(window, GDK_WINDOW_TYPE_HINT_DOCK);
 	gtk_window_stick(window);
 
@@ -109,6 +117,7 @@ main (int argc, char *argv[]) {
 	g_signal_connect(web_view, "context-menu", G_CALLBACK(wk_context_menu_cb), web_view);
 	g_signal_connect(web_view, "notify::load-status", G_CALLBACK(wk_notify_load_status_cb), web_view);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(window, "realize", G_CALLBACK(wk_realize_handler),&dim);
 
 	wklog("Opening URI '%s'", wkline_theme_uri);
 	webkit_web_view_load_uri(web_view, wkline_theme_uri);
@@ -131,8 +140,6 @@ main (int argc, char *argv[]) {
 
 	gtk_main();
 
-	json_decref(config->widgets_config);
-	free(config);
 	free(ewmh);
 
 	return 0;
