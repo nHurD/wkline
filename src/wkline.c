@@ -72,7 +72,7 @@ main (int argc, char *argv[]) {
 	wkline_config_t *config = malloc(sizeof(wkline_config_t));
 	load_config_file(config);
 
-	wklog("widget data size: %d", json_array_size(config.widget_data));
+	wklog("widget data size: %d", json_array_size(config->widgets_config));
 
 	gtk_init(&argc, &argv);
 

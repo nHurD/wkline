@@ -11,7 +11,8 @@ enum wkline_position {
 typedef struct wkline_config_t {
 	int height;
 	enum wkline_position position;
-	char theme_uri[CONFIG_BUF_SIZE];
-	char background[CONFIG_BUF_SIZE];
+	char *theme_uri;
+	char *background;
 	json_t *widgets_config;
+	char **enabled_widgets;
 } wkline_config_t;
