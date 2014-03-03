@@ -3,57 +3,45 @@
 	"position": "top",
 	"theme_uri": "http://lokaltog.github.io/wkline-default-theme/",
 	"background": "#111",
-	"widgets": [
-		{
-			"name": "desktops",
-			"config": {
-				"names": ["I", "II", "III", "IV", "V"]
-			}
+	"widgets_enabled": [
+		"desktops",
+		"window_title",
+		"now_playing_mpd",
+		"volume",
+		"weather",
+		"external_ip",
+		"battery",
+		"datetime"
+	],
+	"widgets_config": {
+		"battery": {
+			"name": "BAT0"
 		},
-		{
-			"name": "window_title"
-		},
-		{
-			"name": "now_playing_mpd",
-			"config": {
-				"update_interval": 1000,
-				"host": "localhost",
-				"port": 6060
-			}
-		},
-		{
-			"name": "volume",
-			"config": {
-				"card": "default",
-				"selem": "Master"
-			}
-		},
-		{
-			"name": "weather",
-			"config": {
-				"location": "",
-				"unit": "c"
-			}
-		},
-		{
-			"name": "external_ip",
-			"config": {
-				"address": "http://ipv4.icanhazip.com/"
-			}
-		},
-		{
-			"name": "battery",
-			"config": {
-				"name": "BAT0"
-			}
-		},
-		{
-			"name": "datetime",
-			"config": {
+		"datetime": {
 				"update_interval": 1000,
 				"date_format": "DDDD-MM-YY",
 				"time_format": "HH:mm:ss"
-			}
+		},
+		"desktops": {
+				"names": ["I", "II", "III", "IV", "V"]
+		},
+		"external_ip": {
+				"uri": "http://ipv4.icanhazip.com/"
+		},
+		"now_playing_mpd": {
+				"update_interval": 1000,
+				"host": "localhost",
+				"port": 6060
+		},
+		"volume": {
+				"card": "default",
+				"selem": "Master"
+		},
+		"window_title": {
+		},
+		"weather": {
+				"location": "",
+				"unit": "c"
 		}
-	]
+	}
 }
