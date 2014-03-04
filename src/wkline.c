@@ -19,8 +19,8 @@ wk_realize_handler(GtkWidget *window, gpointer user_data){
 	atom = gdk_atom_intern ("_NET_WM_STRUT", FALSE);
 
 	gdkw = gtk_widget_get_window(GTK_WIDGET(window));
-	gdk_property_change (gdkw, atom, gdk_atom_intern("CARDINAL", FALSE),
-	                     32, GDK_PROP_MODE_REPLACE, (guchar *)vals, LENGTH(vals));
+	gdk_property_change(gdkw, atom, gdk_atom_intern("CARDINAL", FALSE),
+	                    32, GDK_PROP_MODE_REPLACE, (guchar *)vals, LENGTH(vals));
 }
 
 int
@@ -61,10 +61,12 @@ main (int argc, char *argv[]) {
 	gtk_container_add(GTK_CONTAINER(layout), GTK_WIDGET(web_view));
 	gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(layout));
 
-	g_signal_connect(web_view, "context-menu", G_CALLBACK(wk_context_menu_cb), web_view);
-	g_signal_connect(web_view, "notify::load-status", G_CALLBACK(wk_notify_load_status_cb), web_view);
+#ifndef DEBUG // only disable context menu in prod build
+	g_signal_connect(web_view, "context-menu", G_CALLBACK(wk_context_menu_cb), NULL);
+#endif
+	g_signal_connect(web_view, "window-object-cleared", G_CALLBACK(window_object_cleared_cb), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(window, "realize", G_CALLBACK(wk_realize_handler),&dim);
+	g_signal_connect(window, "realize", G_CALLBACK(wk_realize_handler), &dim);
 
 	wklog("Opening URI '%s'", wkline_theme_uri);
 	webkit_web_view_load_uri(web_view, wkline_theme_uri);
