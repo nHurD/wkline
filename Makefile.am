@@ -10,8 +10,10 @@ libdesktops_la_CFLAGS = \
 	$(AM_CFLAGS)
 
 wkline_SOURCES = \
+	util/copy_prop.c \
 	util/log.c \
-	src/wkline.c
+	src/wkline.c \
+	src/widgets/widgets.c
 
 wkline_LDADD = \
 	$(GTK3_LIBS) \
