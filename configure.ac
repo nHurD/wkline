@@ -1,7 +1,11 @@
 AC_INIT([wkline], [0.01], [https://github.com/Lokaltog/wkline])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_CONFIG_HEADERS([config.h])
+
+AM_PROG_AR
+LT_INIT
 
 AC_ARG_WITH([alsa], AS_HELP_STRING([--without-alsa], [compile without alsa support]))
 AC_ARG_WITH([curl], AS_HELP_STRING([--without-curl], [compile without libcurl support]))

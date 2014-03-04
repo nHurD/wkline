@@ -1,4 +1,5 @@
 *.o
+*.la
 
 # autotools junk
 Makefile
@@ -17,3 +18,4 @@ Makefile.in
 /wkline
 .deps/
 .dirstamp
+.libs/
