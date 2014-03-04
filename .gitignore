@@ -1,5 +1,6 @@
 *.o
 *.la
+*.lo
 
 # autotools junk
 Makefile
@@ -19,3 +20,6 @@ Makefile.in
 .deps/
 .dirstamp
 .libs/
+libtool
+ar-lib
+ltmain.sh
