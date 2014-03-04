@@ -3,56 +3,10 @@
 #include "util/log.h"
 #include "widgets/widgets.h"
 
-WebKitWebView *web_view;
-GThread *widget_threads[LENGTH(wkline_widgets)];
-
-gboolean
-update_widget (widget_data_t *widget_data) {
-	char *script_template = "if(typeof widgets!=='undefined'){try{widgets.update('%s',%s)}catch(e){console.log('Could not update widget: '+e)}}";
-	int script_length = 0;
-	char *script;
-
-	// Get the length of the script payload.
-	script_length = snprintf(NULL,
-							 0,
-				 			 script_template,
-				 			 widget_data->widget, 
-				 			 widget_data->data);
-	// Add 1 for \0
-	script = malloc(script_length + 1);
-
-#ifdef DEBUG_JSON
-	wklog("Updating widget %s: %s", widget_data->widget, widget_data->data);
-#endif
-	sprintf(script, script_template, widget_data->widget, widget_data->data);
-
-	webkit_web_view_execute_script(web_view, script);
-	free(widget_data);
-	free(script);
-
-	return FALSE; // only run once
-}
-
 static gboolean
 wk_context_menu_cb (WebKitWebView *web_view, GtkWidget *window) {
 	// Disable context menu
 	return TRUE;
-}
-
-static void
-wk_notify_load_status_cb (WebKitWebView *web_view, GParamSpec *pspec, GtkWidget *window) {
-	WebKitLoadStatus status = webkit_web_view_get_load_status(web_view);
-
-	if (status == WEBKIT_LOAD_FINISHED) {
-		unsigned short i;
-		for (i = 0; i < LENGTH(wkline_widgets); i++) {
-			// FIXME this is pretty bad, it should probably join and recreate the threads instead
-			if (! widget_threads[i] && wkline_widgets[i]) {
-				wklog("Creating widget thread");
-				widget_threads[i] = g_thread_new("widget", (GThreadFunc)wkline_widgets[i], NULL);
-			}
-		}
-	}
 }
 
 static void
@@ -77,6 +31,7 @@ main (int argc, char *argv[]) {
 	GdkRectangle dest;
 	gint monitor_num;
 	wk_dimensions_t dim;
+	WebKitWebView *web_view;
 
 	gtk_init(&argc, &argv);
 
