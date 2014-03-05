@@ -12,6 +12,13 @@ AC_ARG_WITH([curl], AS_HELP_STRING([--without-curl], [compile without libcurl su
 AC_ARG_WITH([dbus], AS_HELP_STRING([--without-dbus], [compile without dbus-glib support]))
 AC_ARG_WITH([mpd], AS_HELP_STRING([--without-mpd], [compile without libmpdclient support]))
 
+AC_ARG_WITH(widgetdir, [ --with-widgetdir=DIR	set the directory where widgets will be installed],
+		   widgetdir=$withval,
+		   widgetdir=$libdir/wkline
+		   )
+AC_DEFINE_UNQUOTED(WIDGETDIR, "$widgetdir", [Runtime widget location])
+AC_SUBST(widgetdir)
+
 AS_IF([test "x$with_alsa" != "xno"],
       [PKG_CHECK_MODULES([ALSA], [alsa], [have_alsa=yes], [have_alsa=no])],
       [have_alsa=no])

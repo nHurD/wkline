@@ -75,3 +75,4 @@ libvolume_la_LIBADD = $(wkline_LDADD) $(ALSA_LIBS)
 endif
 
 dist_doc_DATA = README.rst
+libdir = @widgetdir@
