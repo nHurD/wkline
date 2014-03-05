@@ -1,8 +1,8 @@
 bin_PROGRAMS = wkline
 
-lib_LTLIBRARIES = libdesktops.la
-libdesktops_la_SOURCES = src/widgets/desktops.c
-libdesktops_la_CFLAGS = \
+lib_LTLIBRARIES = libwidget_desktops.la
+libwidget_desktops_la_SOURCES = src/widgets/desktops.c
+libwidget_desktops_la_CFLAGS = \
 	$(GTK3_CFLAGS) \
 	$(WEBKIT_CFLAGS) \
 	$(JSON_GLIB_CFLAGS) \
@@ -30,48 +30,48 @@ wkline_CFLAGS = \
 	$(AM_CFLAGS)
 
 if HAVE_LIBMPDCLIENT
-lib_LTLIBRARIES += libnow_playing_mpd.la
-libnow_playing_mpd_la_SOURCES = src/widgets/now_playing_mpd.c
-libnow_playing_mpd_la_LIBADD = $(wkline_LDADD) $(MPD_LIBS)
-libnow_playing_CFLAGS = $(wkline_CFLAGS) $(MPD_CFLAGS)
+lib_LTLIBRARIES += libwidget_now_playing_mpd.la
+libwidget_now_playing_mpd_la_SOURCES = src/widgets/now_playing_mpd.c
+libwidget_now_playing_mpd_la_LIBADD = $(wkline_LDADD) $(MPD_LIBS)
+libwidgetnow_playing_CFLAGS = $(wkline_CFLAGS) $(MPD_CFLAGS)
 endif
 if HAVE_LIBCURL
-lib_LTLIBRARIES += libweather.la libexternal_ip.la
-libweather_la_SOURCES = \
+lib_LTLIBRARIES += libwidget_weather.la libwidget_external_ip.la
+libwidget_weather_la_SOURCES = \
 	util/curl.c \
 	src/widgets/weather.c
 
-libexternal_ip_la_SOURCES = \
+libwidget_external_ip_la_SOURCES = \
     util/curl.c \
 	src/widgets/external_ip.c
 
-libweather_la_CFLAGS = $(wkline_CFLAGS) $(CURL_CFLAGS)
-libexternal_ip_la_CFLAGS = $(libweather_la_CFLAGS)
-libweather_la_LIBADD = $(wkline_LDADD) $(CURL_LIBS)
-libexternal_ip_la_LIBADD = $(wkline_LDADD) $(CURL_LIBS)
+libwidget_weather_la_CFLAGS = $(wkline_CFLAGS) $(CURL_CFLAGS)
+libwidget_external_ip_la_CFLAGS = $(libwidget_weather_la_CFLAGS)
+libwidget_weather_la_LIBADD = $(wkline_LDADD) $(CURL_LIBS)
+libwidget_external_ip_la_LIBADD = $(wkline_LDADD) $(CURL_LIBS)
 endif
 
 if HAVE_DBUS
-lib_LTLIBRARIES += libnotifications.la libbattery.la
-libnotifications_la_SOURCES = \
+lib_LTLIBRARIES += libwidget_notifications.la libwidget_battery.la
+libwidget_notifications_la_SOURCES = \
 	util/dbus_helpers.c \
 	src/widgets/notifications.c
-libbattery_la_SOURCES = \
+libwidget_battery_la_SOURCES = \
 	util/dbus_helpers.c \
 	src/widgets/battery.c
 
-libnotifications_la_CFLAGS = $(wkline_CFLAGS) $(DBUS_CFLAGS)
-libbattery_la_CFLAGS = $(wkline_CFLAGS) $(DBUS_CFLAGS)
+libwidget_notifications_la_CFLAGS = $(wkline_CFLAGS) $(DBUS_CFLAGS)
+libwidget_battery_la_CFLAGS = $(wkline_CFLAGS) $(DBUS_CFLAGS)
 
-libnotifications_la_LIBADD = $(wkline_LDADD) $(DBUS_LIBS)
-libbattery_la_LIBADD = $(wkline_LDADD) $(DBUS_LIBS)
+libwidget_notifications_la_LIBADD = $(wkline_LDADD) $(DBUS_LIBS)
+libwidget_battery_la_LIBADD = $(wkline_LDADD) $(DBUS_LIBS)
 endif
 
 if HAVE_ALSA
-lib_LTLIBRARIES += libvolume.la
-libvolume_la_SOURCES = src/widgets/volume.c
-libvolume_la_CFLAGS = $(wkline_CFLAGS) $(ALSA_CFLAGS)
-libvolume_la_LIBADD = $(wkline_LDADD) $(ALSA_LIBS)
+lib_LTLIBRARIES += libwidget_volume.la
+libwidget_volume_la_SOURCES = src/widgets/volume.c
+libwidget_volume_la_CFLAGS = $(wkline_CFLAGS) $(ALSA_CFLAGS)
+libwidget_volume_la_LIBADD = $(wkline_LDADD) $(ALSA_LIBS)
 endif
 
 dist_doc_DATA = README.rst
