@@ -2,7 +2,7 @@
 #include "window_title.h"
 
 static void
-window_title_send_update (widget_data_t *widget_data, xcb_ewmh_connection_t *ewmh, int screen_nbr, xcb_window_t *cur_win) {
+window_title_send_update (struct widget *widget, xcb_ewmh_connection_t *ewmh, int screen_nbr, xcb_window_t *cur_win) {
 	xcb_window_t win;
 	xcb_ewmh_get_utf8_strings_reply_t ewmh_txt_prop;
 	xcb_icccm_get_text_property_reply_t icccm_txt_prop;
@@ -44,13 +44,13 @@ window_title_send_update (widget_data_t *widget_data, xcb_ewmh_connection_t *ewm
 
 	json_payload = json_dumps(json_data_object, 0);
 
-	widget_data->data = strdup(json_payload);
-	g_idle_add((GSourceFunc)update_widget, widget_data);
+	widget->data = strdup(json_payload);
+	g_idle_add((GSourceFunc)update_widget, widget);
 	json_decref(json_data_object);
 }
 
 void
-*widget_window_title (widget_data_t *widget_data) {
+*widget_window_title (struct widget *widget) {
 	xcb_connection_t *conn = xcb_connect(NULL, NULL);
 	if (xcb_connection_has_error(conn)) {
 		wklog("Could not connect to display %s.", getenv("DISPLAY"));
@@ -76,7 +76,7 @@ void
 		return 0;
 	}
 
-	window_title_send_update(widget_data, ewmh, screen_nbr, &cur_win);
+	window_title_send_update(widget, ewmh, screen_nbr, &cur_win);
 
 	for (;;) {
 		while ((evt = xcb_wait_for_event(ewmh->connection)) != NULL) {
@@ -85,10 +85,10 @@ void
 			case XCB_PROPERTY_NOTIFY:
 				pne = (xcb_property_notify_event_t *) evt;
 				if (pne->atom == ewmh->_NET_ACTIVE_WINDOW) {
-					window_title_send_update(widget_data, ewmh, screen_nbr, &cur_win);
+					window_title_send_update(widget, ewmh, screen_nbr, &cur_win);
 				}
 				else if (pne->window != ewmh->screens[screen_nbr]->root && (pne->atom == ewmh->_NET_WM_NAME || pne->atom == XCB_ATOM_WM_NAME)) {
-					window_title_send_update(widget_data, ewmh, screen_nbr, &cur_win);
+					window_title_send_update(widget, ewmh, screen_nbr, &cur_win);
 				}
 			default:
 				break;
@@ -97,6 +97,6 @@ void
 		}
 	}
 
-	free(ewmh);
+	xcb_ewmh_connection_wipe(ewmh);
 	return 0;
 }

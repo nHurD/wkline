@@ -2,12 +2,8 @@
 #include "battery.h"
 #include "util/dbus_helpers.h"
 
-DBusGConnection *conn;
-DBusGProxy *proxy;
-DBusGProxy *properties_proxy;
-
 static int
-widget_battery_send_update (widget_data_t *widget_data, char *pathbuf) {
+widget_battery_send_update (struct widget *widget, DBusGProxy *properties_proxy, char *pathbuf) {
 	gdouble percentage;
 	guint state;
 	gint64 time_to_empty64, time_to_full64;
@@ -31,19 +27,24 @@ widget_battery_send_update (widget_data_t *widget_data, char *pathbuf) {
 
 	json_payload = json_dumps(json_data_object, 0);
 
-	widget_data->data = strdup(json_payload);
-	g_idle_add((GSourceFunc)update_widget, widget_data);
+	widget->data = strdup(json_payload);
+	g_idle_add((GSourceFunc)update_widget, widget);
 	json_decref(json_data_object);
 
 	return 0;
 }
 
-void
-*widget_battery (widget_data_t *widget_data) {
+void *
+widget_battery (struct widget *widget) {
+	DBusGConnection *conn;
+	DBusGProxy *proxy;
+	DBusGProxy *properties_proxy;
 	char pathbuf[128];
 	GError *error = NULL;
+
 	conn = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-	sprintf(pathbuf, "/org/freedesktop/UPower/devices/battery_%s", wkline_widget_battery_name);
+	sprintf(pathbuf, "/org/freedesktop/UPower/devices/battery_%s",
+	        json_string_value(wkline_widget_get_config(widget, "name")));
 
 	if (conn == NULL) {
 		wklog("dbus: failed to open connection to bus: %s\n", error->message);
@@ -75,7 +76,7 @@ void
 	}
 
 	for (;;) {
-		widget_battery_send_update(widget_data, pathbuf);
+		widget_battery_send_update(widget, properties_proxy, pathbuf);
 
 		sleep(20);
 	}

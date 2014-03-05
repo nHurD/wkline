@@ -2,12 +2,12 @@
 #include "desktops.h"
 
 static void
-desktops_send_update (widget_data_t *widget_data, xcb_ewmh_connection_t *ewmh, int screen_nbr) {
+desktops_send_update (struct widget *widget, xcb_ewmh_connection_t *ewmh, int screen_nbr) {
 	unsigned short i;
 	uint32_t desktop_curr, desktop_len, client_desktop;
 	xcb_ewmh_get_windows_reply_t clients;
 	xcb_icccm_wm_hints_t window_hints;
-	desktop_t *desktops = calloc(DESKTOP_MAX_LEN, sizeof(desktop_t));
+	struct desktop *desktops = calloc(DESKTOP_MAX_LEN, sizeof(struct desktop));
 
 	// get current desktop
 	if (! xcb_ewmh_get_current_desktop_reply(ewmh, xcb_ewmh_get_current_desktop_unchecked(ewmh, screen_nbr), &desktop_curr, NULL)) {
@@ -75,14 +75,15 @@ desktops_send_update (widget_data_t *widget_data, xcb_ewmh_connection_t *ewmh, i
 
 	json_payload = json_dumps(json_data_object, 0);
 
-	widget_data->data = strdup(json_payload);
-	g_idle_add((GSourceFunc)update_widget, widget_data);
+	widget->data = strdup(json_payload);
+	g_idle_add((GSourceFunc)update_widget, widget);
 	json_decref(json_data_object);
+
 	free(desktops);
 }
 
-void
-*widget_desktops (widget_data_t *widget_data) {
+void *
+widget_desktops (struct widget *widget) {
 	xcb_connection_t *conn = xcb_connect(NULL, NULL);
 	if (xcb_connection_has_error(conn)) {
 		wklog("Could not connect to display %s.", getenv("DISPLAY"));
@@ -107,7 +108,7 @@ void
 		return 0;
 	}
 
-	desktops_send_update(widget_data, ewmh, screen_nbr);
+	desktops_send_update(widget, ewmh, screen_nbr);
 
 	for (;;) {
 		while ((evt = xcb_wait_for_event(ewmh->connection)) != NULL) {
@@ -116,14 +117,14 @@ void
 			case XCB_PROPERTY_NOTIFY:
 				pne = (xcb_property_notify_event_t *) evt;
 				if (pne->atom == ewmh->_NET_DESKTOP_NAMES) {
-					desktops_send_update(widget_data, ewmh, screen_nbr);
+					desktops_send_update(widget, ewmh, screen_nbr);
 				}
 				else if (pne->atom == ewmh->_NET_NUMBER_OF_DESKTOPS) {
-					desktops_send_update(widget_data, ewmh, screen_nbr);
-					}
+					desktops_send_update(widget, ewmh, screen_nbr);
+				}
 				else if (pne->atom == ewmh->_NET_CURRENT_DESKTOP) {
-					desktops_send_update(widget_data, ewmh, screen_nbr);
-					}
+					desktops_send_update(widget, ewmh, screen_nbr);
+				}
 			default:
 				break;
 			}
@@ -131,6 +132,6 @@ void
 		}
 	}
 
-	free(ewmh);
+	xcb_ewmh_connection_wipe(ewmh);
 	return 0;
 }

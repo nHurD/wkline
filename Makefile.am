@@ -12,6 +12,7 @@ libdesktops_la_CFLAGS = \
 wkline_SOURCES = \
 	util/copy_prop.c \
 	util/log.c \
+	util/load_config.c \
 	src/wkline.c \
 	src/widgets/widgets.c
 

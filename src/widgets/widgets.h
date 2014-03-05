@@ -3,28 +3,25 @@
 #include <string.h>
 #include <webkit/webkit.h>
 #include <xcb/xcb_ewmh.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-typedef struct widget_data_t {
-	char widget[32];
-	char *data;
+struct widget {
+	const char *name;
+	json_t *config;
 	WebKitWebView *web_view;
-} widget_data_t;
-
-typedef struct widget_t {
+	char *data;
+};
+struct widget_call {
 	void *func;
-	char id[32];
-	widget_data_t *data;
-} widget_t;
+	const char *name;
+};
 
+gboolean update_widget (struct widget *widget);
+void window_object_cleared_cb (WebKitWebView *web_view, GParamSpec *pspec, gpointer context, gpointer window_object, gpointer user_data);
 
-gboolean update_widget (widget_data_t *widget_data);
-void window_object_cleared_cb(WebKitWebView  *web_view,
-                              WebKitWebFrame *frame,
-                              gpointer context,
-                              gpointer window_object,
-                              gpointer user_data);
-
-static const widget_t widgets[] = {
+static const struct widget_call wkline_widgets[] = {
 
 };
 
