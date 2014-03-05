@@ -33,7 +33,7 @@ if HAVE_LIBMPDCLIENT
 lib_LTLIBRARIES += libwidget_now_playing_mpd.la
 libwidget_now_playing_mpd_la_SOURCES = src/widgets/now_playing_mpd.c
 libwidget_now_playing_mpd_la_LIBADD = $(wkline_LDADD) $(MPD_LIBS)
-libwidgetnow_playing_CFLAGS = $(wkline_CFLAGS) $(MPD_CFLAGS)
+libwidgetnow_playing_mpd_la_CFLAGS = $(wkline_CFLAGS) $(MPD_CFLAGS)
 endif
 if HAVE_LIBCURL
 lib_LTLIBRARIES += libwidget_weather.la libwidget_external_ip.la
