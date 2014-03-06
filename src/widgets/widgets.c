@@ -3,6 +3,8 @@
 
 GThread *widget_threads[LENGTH(wkline_widgets)];
 
+#define MODULE_LOAD_STRING "%s/libwidget_%s.so"
+
 gboolean
 update_widget (struct widget *widget) {
 	char *script_template = "if(typeof widgets!=='undefined'){try{widgets.update('%s',%s)}catch(e){console.log('Could not update widget: '+e)}}";
@@ -50,3 +52,63 @@ window_object_cleared_cb (WebKitWebView *web_view, GParamSpec *pspec, gpointer c
 		}
 	}
 }
+
+void
+wkline_load_widgets(struct wkline *wkline) {
+	json_t *widgets = wkline_get_config(wkline, "widgets");
+	const char *widget_name;
+	json_t *widget_data;
+	json_t *tmp_value;
+	char *module_path;
+	int module_path_length;
+	GModule *widget_module;
+	int widget_count = 0;
+
+	if (! widgets) {
+		wklog("config error: widgets object not found");
+		return;
+	}
+
+	// Iterate through the object to determine what to load
+	json_object_foreach(widgets, widget_name, widget_data) {
+		tmp_value = json_object_get(widget_data, "enabled");
+		// If enabled is true, load it
+		if (json_typeof(tmp_value) == JSON_TRUE) {
+			module_path_length = snprintf(NULL,
+				   	0,
+				   	MODULE_LOAD_STRING,
+				   	WIDGETDIR, 
+					widget_name);
+			module_path = malloc(module_path_length + 1);
+			snprintf(module_path, 
+					module_path_length, 
+					MODULE_LOAD_STRING, 
+					WIDGETDIR, 
+					widget_name);
+			widget_module = g_module_open(module_path, G_MODULE_BIND_LAZY);
+			if (! widget_module) {
+				wklog("Unable to load widget");
+				continue;
+			}
+
+			widget_count++;
+			
+			// Initial initializaton of the collection of widgets.
+			if (wkline_widgets == NULL) {
+				wkline_widgets = malloc(sizeof(struct widget_call));
+			} else {
+				struct wkline_widget *tmp = realloc(
+						wkline_widgets, 
+						sizeof(struct widget_call) * widget_count
+						);
+				if (tmp == NULL) {
+					wklog("Error loading widgets: Unable to allocate memory");
+					return;
+				}
+			}
+
+		}  
+	}
+
+}
+

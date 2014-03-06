@@ -18,12 +18,14 @@ struct widget_call {
 	const char *name;
 };
 
+typedef void (* wk_module_init) (json_t *config);
+
+void wkline_load_widgets();
+
 gboolean update_widget (struct widget *widget);
 void window_object_cleared_cb (WebKitWebView *web_view, GParamSpec *pspec, gpointer context, gpointer window_object, gpointer user_data);
 
-static const struct widget_call wkline_widgets[] = {
-
-};
+static struct widget_call *wkline_widgets = NULL;
 
 #define MISSING_VALUE ""
 #define LENGTH(X) (sizeof X / sizeof X[0])
