@@ -14,7 +14,7 @@ AC_ARG_WITH([mpd], AS_HELP_STRING([--without-mpd], [compile without libmpdclient
 
 AC_ARG_WITH(widgetdir, [ --with-widgetdir=DIR	set the directory where widgets will be installed],
 		   widgetdir=$withval,
-		   widgetdir=$libdir/wkline
+		   widgetdir=$prefix/lib/wkline
 		   )
 AC_DEFINE_UNQUOTED(WIDGETDIR, "$widgetdir", [Runtime widget location])
 AC_SUBST(widgetdir)
@@ -66,6 +66,7 @@ PKG_CHECK_MODULES([GTK3], [gtk+-3.0])
 PKG_CHECK_MODULES([WEBKIT], [webkitgtk-3.0])
 PKG_CHECK_MODULES([XCB], [xcb-util xcb-ewmh xcb-icccm])
 PKG_CHECK_MODULES([JSON_GLIB], [jansson])
+PKG_CHECK_MODULES([GMODULE], [gmodule-2.0])
 
 AC_CONFIG_FILES([
  Makefile

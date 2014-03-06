@@ -74,5 +74,9 @@ libwidget_volume_la_CFLAGS = $(wkline_CFLAGS) $(ALSA_CFLAGS)
 libwidget_volume_la_LIBADD = $(wkline_LDADD) $(ALSA_LIBS)
 endif
 
+# Add Gmodule stuff after everything else.
+wkline_CFLAGS += $(GMODULE_CFLAGS)
+wkline_LDADD += $(GMODULE_LIBS)
+
 dist_doc_DATA = README.rst
 libdir = @widgetdir@
