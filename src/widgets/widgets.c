@@ -1,5 +1,4 @@
 #include "widgets.h"
-#include "../wkline.h" // required for struct wkline
 
 GThread *widget_threads[LENGTH(wkline_widgets)];
 
@@ -54,8 +53,8 @@ window_object_cleared_cb (WebKitWebView *web_view, GParamSpec *pspec, gpointer c
 }
 
 void
-wkline_load_widgets(struct wkline *wkline) {
-	json_t *widgets = wkline_get_config(wkline, "widgets");
+wkline_load_widgets(struct wkline *data) {
+	json_t *widgets = wkline_get_config(data, "widgets");
 	const char *widget_name;
 	json_t *widget_data;
 	json_t *tmp_value;
@@ -63,6 +62,8 @@ wkline_load_widgets(struct wkline *wkline) {
 	int module_path_length;
 	GModule *widget_module;
 	int widget_count = 0;
+	wk_widget_function widget_func;
+
 
 	if (! widgets) {
 		wklog("config error: widgets object not found");
@@ -91,21 +92,29 @@ wkline_load_widgets(struct wkline *wkline) {
 				continue;
 			}
 
+			if (! g_module_symbol(widget_module, "wkline_init", &widget_func)){
+				wklog("Unable ot initialize module");
+				continue;
+			}
+
 			widget_count++;
 			
 			// Initial initializaton of the collection of widgets.
-			if (wkline_widgets == NULL) {
-				wkline_widgets = malloc(sizeof(struct widget_call));
+			if (widget_count == 1) {
+				wkline_widgets = malloc(sizeof(struct widget_call *));
 			} else {
 				struct wkline_widget *tmp = realloc(
 						wkline_widgets, 
-						sizeof(struct widget_call) * widget_count
+						sizeof(struct widget_call *) * widget_count
 						);
 				if (tmp == NULL) {
 					wklog("Error loading widgets: Unable to allocate memory");
 					return;
 				}
 			}
+
+			wkline_widgets[(widget_count - 1)].func = widget_func();
+			wkline_widgets[(widget_count - 1)].name = strdup(widget_name);
 
 		}  
 	}

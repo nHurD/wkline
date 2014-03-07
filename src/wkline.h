@@ -8,6 +8,8 @@
 #include <config.h>
 #endif
 
+#ifndef WKLINE_H
+#define WKLINE_H
 struct wkline_dimensions {
 	int w;
 	int h;
@@ -18,3 +20,4 @@ struct wkline {
 	json_t *config;
 	const char *position;
 };
+#endif

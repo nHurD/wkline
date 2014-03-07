@@ -135,3 +135,8 @@ widget_desktops (struct widget *widget) {
 	xcb_ewmh_connection_wipe(ewmh);
 	return 0;
 }
+
+widget_handler 
+wkline_init() {
+	return widget_desktops;
+}
