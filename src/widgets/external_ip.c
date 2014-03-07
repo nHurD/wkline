@@ -32,3 +32,8 @@ widget_external_ip (struct widget *widget) {
 
 	return 0;
 }
+
+gpointer
+wkline_init() {
+	return &widget_external_ip;
+}

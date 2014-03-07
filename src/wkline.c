@@ -51,6 +51,8 @@ main (int argc, char *argv[]) {
 	wkline->config = load_config_file();
 	wkline->position = json_string_value(wkline_get_config(wkline, "position"));
 
+	wkline_load_widgets(wkline);
+
 	// GtkScrolledWindow fails to lock small heights (<25px), so a GtkLayout is used instead
 	window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));
 	layout = GTK_LAYOUT(gtk_layout_new(NULL, NULL));

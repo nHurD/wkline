@@ -1,6 +1,6 @@
 #include "widgets.h"
 
-GThread *widget_threads[LENGTH(wkline_widgets)];
+GThread **widget_threads;
 
 #define MODULE_LOAD_STRING "%s/libwidget_%s.so"
 
@@ -44,10 +44,10 @@ window_object_cleared_cb (WebKitWebView *web_view, GParamSpec *pspec, gpointer c
 			widget->config = wkline->config;
 			widget->web_view = web_view;
 			// Dont forget to free this one
-			widget->name = strdup(wkline_widgets[i].name);
+			widget->name = strdup(wkline_widgets[i]->name);
 
-			wklog("creating thread for widget '%s'", wkline_widgets[i].name);
-			widget_threads[i] = g_thread_new(wkline_widgets[i].name, (GThreadFunc)wkline_widgets[i].func, widget);
+			wklog("creating thread for widget '%s'", wkline_widgets[i]->name);
+			widget_threads[i] = g_thread_new(wkline_widgets[i]->name, (GThreadFunc)wkline_widgets[i]->func, widget);
 		}
 	}
 }
@@ -63,6 +63,8 @@ wkline_load_widgets(struct wkline *data) {
 	GModule *widget_module;
 	int widget_count = 0;
 	wk_widget_function widget_func;
+
+	wklog("Begin Module init");
 
 
 	if (! widgets) {
@@ -82,18 +84,23 @@ wkline_load_widgets(struct wkline *data) {
 					widget_name);
 			module_path = malloc(module_path_length + 1);
 			snprintf(module_path, 
-					module_path_length, 
+					module_path_length + 1, 
 					MODULE_LOAD_STRING, 
 					WIDGETDIR, 
 					widget_name);
 			widget_module = g_module_open(module_path, G_MODULE_BIND_LAZY);
 			if (! widget_module) {
-				wklog("Unable to load widget");
+				wklog("Unable to load widget: %s\n\t%s", module_path, g_module_error());
 				continue;
 			}
 
-			if (! g_module_symbol(widget_module, "wkline_init", &widget_func)){
-				wklog("Unable ot initialize module");
+
+			gboolean result = g_module_symbol(widget_module,
+											  "wkline_init",
+											  (gpointer *)&widget_func);
+			if (! result){
+				wklog("Unable ot initialize module: %s", g_module_error());
+				g_module_close(widget_module);
 				continue;
 			}
 
@@ -101,9 +108,11 @@ wkline_load_widgets(struct wkline *data) {
 			
 			// Initial initializaton of the collection of widgets.
 			if (widget_count == 1) {
+				wklog("New");
 				wkline_widgets = malloc(sizeof(struct widget_call *));
 			} else {
-				struct wkline_widget *tmp = realloc(
+				wklog("Expand");
+				struct wkline_widget **tmp = realloc(
 						wkline_widgets, 
 						sizeof(struct widget_call *) * widget_count
 						);
@@ -113,11 +122,15 @@ wkline_load_widgets(struct wkline *data) {
 				}
 			}
 
-			wkline_widgets[(widget_count - 1)].func = widget_func();
-			wkline_widgets[(widget_count - 1)].name = strdup(widget_name);
+			wklog("Add info");
+			wkline_widgets[(widget_count - 1)] = malloc(sizeof(struct widget_call));
+			wkline_widgets[(widget_count - 1)]->func = widget_func();
+			wkline_widgets[(widget_count - 1)]->name = strdup(widget_name);
 
 		}  
 	}
+	widget_threads = malloc(widget_count * sizeof(GThread *));
+	wklog("%d widgets loaded.", LENGTH(widget_threads));
 
 }
 

@@ -84,6 +84,7 @@ desktops_send_update (struct widget *widget, xcb_ewmh_connection_t *ewmh, int sc
 
 void *
 widget_desktops (struct widget *widget) {
+	wklog("Desktops widget loaded");
 	xcb_connection_t *conn = xcb_connect(NULL, NULL);
 	if (xcb_connection_has_error(conn)) {
 		wklog("Could not connect to display %s.", getenv("DISPLAY"));
@@ -136,7 +137,7 @@ widget_desktops (struct widget *widget) {
 	return 0;
 }
 
-widget_handler 
+gpointer
 wkline_init() {
 	return widget_desktops;
 }
