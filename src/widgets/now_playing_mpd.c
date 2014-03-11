@@ -10,21 +10,23 @@ widget_now_playing_mpd_send_update (struct widget *widget, struct mpd_connection
 	struct mpd_status *status;
 	enum mpd_state state;
 
-	// get mpd status
+	/* get mpd status */
 	mpd_send_status(connection);
 	status = mpd_recv_status(connection);
 	if (status == NULL) {
-		wklog("mpd: status error: %s", mpd_connection_get_error_message(connection));
+		LOG_ERR("mpd: status error: %s", mpd_connection_get_error_message(connection));
+
 		return -1;
 	}
 	state = mpd_status_get_state(status);
 	if (mpd_connection_get_error(connection) != MPD_ERROR_SUCCESS) {
-		wklog("mpd: state error: %s", mpd_connection_get_error_message(connection));
+		LOG_ERR("mpd: state error: %s", mpd_connection_get_error_message(connection));
+
 		return -1;
 	}
 
-	// only update if playing/paused
-	if (! (state == MPD_STATE_STOP || state == MPD_STATE_UNKNOWN)) {
+	/* only update if playing/paused */
+	if (!((state == MPD_STATE_STOP) || (state == MPD_STATE_UNKNOWN))) {
 		mpd_send_current_song(connection);
 
 		while ((song = mpd_recv_song(connection)) != NULL) {
@@ -38,7 +40,8 @@ widget_now_playing_mpd_send_update (struct widget *widget, struct mpd_connection
 			mpd_song_free(song);
 
 			if (mpd_connection_get_error(connection) != MPD_ERROR_SUCCESS) {
-				wklog("mpd: song error: %s", mpd_connection_get_error_message(connection));
+				LOG_ERR("mpd: song error: %s", mpd_connection_get_error_message(connection));
+
 				return -1;
 			}
 		}
@@ -64,24 +67,34 @@ widget_now_playing_mpd_send_update (struct widget *widget, struct mpd_connection
 	return 0;
 }
 
-void
-*widget_now_playing_mpd (struct widget *widget) {
+static void
+widget_cleanup (void *arg) {
+	LOG_INFO("widget cleanup: now_playing_mpd");
+
+	struct mpd_connection *connection = arg;
+	mpd_connection_free(connection);
+}
+
+void*
+widget_init (struct widget *widget) {
 	struct mpd_connection *connection = mpd_connection_new(json_string_value(wkline_widget_get_config(widget, "host")),
 	                                                       json_integer_value(wkline_widget_get_config(widget, "port")),
 	                                                       json_integer_value(wkline_widget_get_config(widget, "timeout")));
 
 	if (mpd_connection_get_error(connection) != MPD_ERROR_SUCCESS) {
-		wklog("mpd: failed to connect to mpd server at %s:%i: %s",
-		      json_string_value(wkline_widget_get_config(widget, "host")),
-		      json_integer_value(wkline_widget_get_config(widget, "port")),
-		      mpd_connection_get_error_message(connection));
+		LOG_ERR("mpd: failed to connect to mpd server at %s:%i: %s",
+		        json_string_value(wkline_widget_get_config(widget, "host")),
+		        json_integer_value(wkline_widget_get_config(widget, "port")),
+		        mpd_connection_get_error_message(connection));
 		mpd_connection_free(connection);
+
 		return 0;
 	}
 
 	fd_set fds;
 	int s, mpd_fd = mpd_connection_get_fd(connection);
 
+	pthread_cleanup_push(widget_cleanup, connection);
 	widget_now_playing_mpd_send_update(widget, connection);
 
 	for (;;) {
@@ -90,25 +103,24 @@ void
 
 		s = select(FD_SETSIZE, &fds, NULL, NULL, NULL);
 		if (s < 0) {
-			wklog("mpd: select error");
+			LOG_ERR("mpd: select error");
 			break;
 		}
-		if (! s) {
-			wklog("mpd: select timeout");
+		if (!s) {
 			break;
 		}
 
-		if(FD_ISSET(mpd_fd, &fds)) { //  && interrupt(connection) < 0
-			// empty event buffer
+		if (FD_ISSET(mpd_fd, &fds)) {
+			/* empty event buffer */
 			mpd_recv_idle(connection, true);
 			if (mpd_connection_get_error(connection) != MPD_ERROR_SUCCESS) {
-				wklog("mpd: recv error: %s", mpd_connection_get_error_message(connection));
+				LOG_ERR("mpd: recv error: %s", mpd_connection_get_error_message(connection));
 				break;
 			}
 			widget_now_playing_mpd_send_update(widget, connection);
 		}
 	}
+	pthread_cleanup_pop(1);
 
-	mpd_connection_free(connection);
 	return 0;
 }

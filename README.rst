@@ -14,20 +14,20 @@ blurred background without a desktop compositor running.
 Installation
 ------------
 
-wkline is available for Arch Linux users as ``wkline-git`` on the AUR.
+wkline is available for Arch Linux users as `wkline-git`_ on the AUR.
 
 Dependencies:
 
 * gtk+ 3
 * jansson
 * webkitgtk+
-* xcb
-* xcb-wm
 
 Optional dependencies:
 
+* xcb (desktops/window title widgets)
+* xcb-wm (desktops/window title widgets)
 * alsa (volume widget)
-* libcurl (weather widget)
+* libcurl (weather/remote IP widgets)
 * libdbus (notification daemon widget)
 * libmpdclient (now playing/mpd widget)
 
@@ -36,19 +36,27 @@ Installation instructions::
   git clone https://github.com/Lokaltog/wkline.git
   cd wkline
 
-  autoreconf --install
-  ./configure
-  make
+  ./waf configure build
+  ./waf install
 
-  mkdir -p ~/.config/wkline
-  cp config.def.json ~/.config/wkline/config.json
+  wkline
 
-  ./wkline
+Debug/development build instructions (with relative library search path)::
+
+  git clone https://github.com/Lokaltog/wkline.git
+  cd wkline
+
+  ./waf clean configure build --debug --prefix=/ \
+      --libdir=`pwd`/out/lib/wkline install --destdir=out
+
+  out/bin/wkline
+
+.. _wkline-git: https://aur.archlinux.org/packages/wkline-git/
 
 Configuration
 -------------
 
-Copy ``config.def.json`` to ``$XDG_CONFIG_HOME/wkline/config.json`` (usually at
+Copy ``config.json`` to ``$XDG_CONFIG_HOME/wkline/config.json`` (usually at
 ``~/.config/wkline/config.json``) and change the configuration. Please make sure that
 your config file is valid JSON, this can be checked with e.g. ``jsonlint``.
 

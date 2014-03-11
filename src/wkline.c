@@ -1,13 +1,16 @@
-#include "util/load_config.h"
-#include "wkline.h"
+#include "util/config.h"
 #include "util/log.h"
-#include "widgets/widgets.h"
+#include "wkline.h"
+#include "widgets.h"
 
+#ifndef DEBUG /* only disable context menu in prod build */
 static gboolean
 wk_context_menu_cb (WebKitWebView *web_view, GtkWidget *window) {
-	// Disable context menu
+	/* Disable context menu */
 	return TRUE;
 }
+
+#endif
 
 static void
 wk_realize_handler (GtkWidget *window, gpointer user_data) {
@@ -18,11 +21,11 @@ wk_realize_handler (GtkWidget *window, gpointer user_data) {
 
 	vals[0] = 0;
 	vals[1] = 0;
-	if (! strcmp(wkline->position, "top")){
+	if (!strcmp(wkline->position, "top")) {
 		vals[2] = wkline->dim.h;
 		vals[3] = 0;
 	}
-	else if (! strcmp(wkline->position, "bottom")){
+	else if (!strcmp(wkline->position, "bottom")) {
 		vals[2] = 0;
 		vals[3] = wkline->dim.h;
 	}
@@ -31,7 +34,45 @@ wk_realize_handler (GtkWidget *window, gpointer user_data) {
 
 	gdkw = gtk_widget_get_window(GTK_WIDGET(window));
 	gdk_property_change(gdkw, atom, gdk_atom_intern("CARDINAL", FALSE),
-	                    32, GDK_PROP_MODE_REPLACE, (guchar *)vals, LENGTH(vals));
+	                    32, GDK_PROP_MODE_REPLACE, (guchar*)vals, LENGTH(vals));
+	gdk_window_set_override_redirect(gdkw, TRUE);
+}
+
+static WebKitWebView*
+web_view_init () {
+	WebKitWebView *web_view;
+	WebKitWebSettings *web_view_settings;
+	WebKitWebPluginDatabase *database;
+	GSList *plugin_list, *p;
+	WebKitWebPlugin *plugin;
+
+	/* disable all plugins */
+	database = webkit_get_web_plugin_database();
+	plugin_list = webkit_web_plugin_database_get_plugins(database);
+	for (p = plugin_list; p; p = p->next) {
+		plugin = (WebKitWebPlugin*)p->data;
+		webkit_web_plugin_set_enabled(plugin, FALSE);
+	}
+	webkit_web_plugin_database_refresh(database);
+	webkit_web_plugin_database_plugins_list_free(plugin_list);
+
+	/* set webview settings */
+	web_view_settings = webkit_web_settings_new();
+	g_object_set(G_OBJECT(web_view_settings),
+	             "enable-accelerated-compositing", TRUE,
+	             "enable-css-shaders", TRUE,
+	             "enable-dns-prefetching", FALSE,
+	             "enable-java-applet", FALSE,
+	             "enable-plugins", FALSE,
+	             "enable-universal-access-from-file-uris", TRUE,
+	             "enable-webgl", TRUE,
+	             "enable-xss-auditor", FALSE,
+	             NULL);
+
+	web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+	webkit_web_view_set_settings(web_view, web_view_settings);
+
+	return web_view;
 }
 
 int
@@ -41,22 +82,33 @@ main (int argc, char *argv[]) {
 	GtkLayout *layout;
 	GdkScreen *screen;
 	GdkRectangle dest;
-	gint monitor_num;
 	WebKitWebView *web_view;
 	const char *wkline_theme_uri;
 
 	gtk_init(&argc, &argv);
-	wkline = malloc(sizeof(struct wkline *));
 
+	LOG_INFO("%s%s%s %s (%s)", ANSI_ESC_CYAN, ANSI_ESC_BOLD, PACKAGE, VERSION, BUILD_TIME);
+
+	wkline = malloc(sizeof(struct wkline));
 	wkline->config = load_config_file();
+	if (!wkline->config) {
+		LOG_ERR("config file not found.");
+		goto config_err;
+	}
+
+	signal(SIGTERM, handle_interrupt);
+	signal(SIGINT, handle_interrupt);
+	signal(SIGHUP, handle_interrupt);
+
 	wkline->position = json_string_value(wkline_get_config(wkline, "position"));
 
-	// GtkScrolledWindow fails to lock small heights (<25px), so a GtkLayout is used instead
+	/* GtkScrolledWindow fails to lock small heights (<25px), so a GtkLayout
+	   is used instead */
 	window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));
 	layout = GTK_LAYOUT(gtk_layout_new(NULL, NULL));
-	web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+	web_view = web_view_init();
 
-	// get window size
+	/* get window size */
 	screen = gtk_window_get_screen(window);
 	gdk_screen_get_monitor_geometry(screen,
 	                                json_integer_value(wkline_get_config(wkline, "monitor")),
@@ -64,11 +116,11 @@ main (int argc, char *argv[]) {
 	wkline->dim.w = dest.width;
 	wkline->dim.h = json_integer_value(wkline_get_config(wkline, "height"));
 
-	// set window dock properties
-	if (! strcmp(wkline->position, "top")) {
+	/* set window dock properties */
+	if (!strcmp(wkline->position, "top")) {
 		gtk_window_move(window, dest.x, 0);
 	}
-	else if (! strcmp(wkline->position, "bottom")) {
+	else if (!strcmp(wkline->position, "bottom")) {
 		gtk_window_move(window, dest.x, dest.y - wkline->dim.h);
 	}
 
@@ -85,15 +137,15 @@ main (int argc, char *argv[]) {
 	gtk_container_add(GTK_CONTAINER(layout), GTK_WIDGET(web_view));
 	gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(layout));
 
-#ifndef DEBUG // only disable context menu in prod build
+#ifndef DEBUG /* only disable context menu in prod build */
 	g_signal_connect(web_view, "context-menu", G_CALLBACK(wk_context_menu_cb), NULL);
 #endif
-	g_signal_connect(web_view, "window-object-cleared", G_CALLBACK(window_object_cleared_cb), wkline);
+	g_signal_connect(web_view, "window-object-cleared", G_CALLBACK(window_object_cleared_cb), wkline->config);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(window, "realize", G_CALLBACK(wk_realize_handler), wkline);
 
 	wkline_theme_uri = json_string_value(wkline_get_config(wkline, "theme_uri"));
-	wklog("Opening URI '%s'", wkline_theme_uri);
+	LOG_INFO("loading theme '%s'", wkline_theme_uri);
 	webkit_web_view_load_uri(web_view, wkline_theme_uri);
 
 	gtk_widget_show_all(GTK_WIDGET(window));
@@ -101,6 +153,8 @@ main (int argc, char *argv[]) {
 	gtk_main();
 
 	json_decref(wkline->config);
+config_err:
 	free(wkline);
+
 	return 0;
 }

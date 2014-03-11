@@ -22,13 +22,11 @@ widget_external_ip_send_update (struct widget *widget) {
 	return 0;
 }
 
-void *
-widget_external_ip (struct widget *widget) {
+void*
+widget_init (struct widget *widget) {
 	for (;;) {
 		widget_external_ip_send_update(widget);
 
 		sleep(600);
 	}
-
-	return 0;
 }

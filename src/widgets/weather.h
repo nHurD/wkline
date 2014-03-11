@@ -1,8 +1,7 @@
-#include <glib.h>
-#include <string.h>
+#include <pthread.h>
 
 #include "util/curl.h"
-#include "util/load_config.h"
+#include "util/config.h"
 
 #define WEATHER_BUF_SIZE 512
 

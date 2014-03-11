@@ -1,12 +1,12 @@
 #include "widgets.h"
 #include "notifications.h"
 
-static char* server_info[] = {"wkline", "Lokaltog", "0.1", "1.2", NULL};
-static char* server_capabilities[] = {"body", NULL};
+static char *server_info[] = { "wkline", "Lokaltog", "0.1", "1.2", NULL };
+static char *server_capabilities[] = { "body", NULL };
 
 static void
-dbus_array_reply(DBusConnection *connection, DBusMessage* msg, char* array[]) {
-	DBusMessage* reply = dbus_message_new_method_return(msg);
+dbus_array_reply (DBusConnection *connection, DBusMessage *msg, char *array[]) {
+	DBusMessage *reply = dbus_message_new_method_return(msg);
 	DBusMessageIter args;
 
 	bool success = true;
@@ -32,7 +32,7 @@ widget_notifications_send_update (struct widget *widget, DBusConnection *connect
 	const char *body;
 	dbus_uint32_t nid = 0;
 	dbus_int32_t expires = -1;
-	void* to_fill = NULL;
+	void *to_fill = NULL;
 
 	dbus_message_iter_init(msg, &args);
 	for (i = 0; i < 8; i++) {
@@ -59,10 +59,10 @@ widget_notifications_send_update (struct widget *widget, DBusConnection *connect
 		if (to_fill) {
 			dbus_message_iter_get_basic(&args, to_fill);
 		}
-		dbus_message_iter_next( &args );
+		dbus_message_iter_next(&args);
 	}
 
-	// send reply
+	/* send reply */
 	reply = dbus_message_new_method_return(msg);
 	dbus_message_iter_init_append(reply, &args);
 	if (dbus_message_iter_append_basic(&args, DBUS_TYPE_UINT32, &nid)) {
@@ -87,45 +87,58 @@ widget_notifications_send_update (struct widget *widget, DBusConnection *connect
 	return 0;
 }
 
-void *
-widget_notifications (struct widget *widget) {
-	DBusConnection* connection;
+static void
+widget_cleanup (void *arg) {
+	LOG_INFO("widget cleanup: notifications");
+
+	DBusConnection *connection = arg;
+	dbus_connection_unref(connection);
+}
+
+void*
+widget_init (struct widget *widget) {
+	DBusConnection *connection;
 	DBusError dbus_error;
-	DBusError* err = &dbus_error;
-	DBusMessage* msg;
+	DBusError *err = &dbus_error;
+	DBusMessage *msg;
 	int server_result;
 
 	dbus_error_init(err);
 	connection = dbus_bus_get(DBUS_BUS_SESSION, err);
 	if (dbus_error_is_set(err)) {
-		wklog("dbus connection error: %s", err->message);
+		LOG_ERR("dbus connection error: %s", err->message);
 		dbus_error_free(err);
-		return;
+
+		return 0;
 	}
-	if (! connection) {
-		wklog("dbus: no connection");
-		return;
+	if (!connection) {
+		LOG_ERR("dbus: no connection");
+
+		return 0;
 	}
 
 	server_result = dbus_bus_request_name(connection, "org.freedesktop.Notifications", DBUS_NAME_FLAG_REPLACE_EXISTING, err);
 	if (dbus_error_is_set(err)) {
-		wklog("dbus error: %s", err->message);
+		LOG_ERR("dbus error: %s", err->message);
 		dbus_error_free(err);
-		return;
+
+		return 0;
 	}
 	if (server_result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
-		wklog("dbus: a notification daemon is already running");
-		return;
+		LOG_WARN("dbus: a notification daemon is already running");
+
+		return 0;
 	}
 	dbus_error_free(err);
 
+	pthread_cleanup_push(widget_cleanup, connection);
 	for (;;) {
 		dbus_connection_read_write(connection, -1);
 
-		while (msg = dbus_connection_pop_message(connection)) {
+		while ((msg = dbus_connection_pop_message(connection)) != NULL) {
 			if (dbus_message_is_method_call(msg, "org.freedesktop.Notifications", "Notify")) {
 				if (widget_notifications_send_update(widget, connection, msg) != 0) {
-					wklog("dbus: error while handling notification");
+					LOG_ERR("dbus: error while handling notification");
 					break;
 				}
 			}
@@ -140,8 +153,5 @@ widget_notifications (struct widget *widget) {
 			dbus_connection_flush(connection);
 		}
 	}
-
-	dbus_connection_unref(connection);
-
-	return 0;
+	pthread_cleanup_pop(1);
 }
